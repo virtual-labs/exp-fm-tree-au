@@ -1,13 +1,330 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-	<!-- Add CSS at the head of HTML file -->
-    <link rel="stylesheet" href="./css/main.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitch-Margoliash Algorithm Simulator</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+       
+        .content-wrapper { display: flex; gap: 20px; margin-top: 20px; }
+        .matrix-container { flex: 1; }
+        .explanations { flex: 1; padding: 15px; background: #f8f9fa; border-radius: 8px; max-height: 600px; overflow-y: auto; }
+        .equation { margin: 10px 0; padding: 10px; background: white; border-radius: 4px; font-family: monospace; }
+       
+    </style>
 </head>
 <body>
-		<!-- Your code goes here-->
+    <div class="container">
+        <img src="logo.png" width="130" height="60" style="vertical-align:middle;margin:8px">
+        <div class='at-item'>Phylogenetic Tree Reconstruction Using Fitch-Margoliash Algorithm</div><br>
+        <div class="content_align">
+            <label>Upload the file:</label>
+        
+       
+            <input type="file" id="fileInput" accept=".txt,.fa,.fasta"> <small>Supported formats: FASTA (.fa) or plain text (.txt)</small>&nbsp;&nbsp;&nbsp;
+            <a href="ms1.txt" download="sample_file.txt">Sample File in .text format</a>
+            &nbsp;&nbsp;<a href="sample.txt" download="sample_file_fasta.txt">Sample FASTA File</a><br>
+            <button onclick="processFile()">Process File</button>
+            <button onclick="location.reload()">Reset</button>
+           
+        </div>
 
-	<!-- Add JS at the bottom of HTML file --> 
-        <script src="./js/main.js"></script>
+        <div class="content-wrapper">
+            <div class="explanations" id="explanations"></div>
+            <div class="matrix-container" id="output"></div>
+        </div>
+        <div id="controls" style="display: none;">
+            <button onclick="nextStep()" id="nextBtn">Next Step</button>
+        </div>
+  
+        <div id="tree-container"></div>
+    </div>
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+        let algorithmState = null;
+        let currentStep = 0;
+
+        function computeDistanceMatrix(sequences, labels) {
+            const size = sequences.length;
+            const matrix = Array.from({length: size}, () => new Array(size).fill(0));
+            let explanations = ["<div style=\"background: #f5f5f5; padding: 15px; border-radius: 5px;\">                   <h3>Construct the Distance Matrix</h3>1. Organize the pairwise distances into a symmetric matrix where:<br>&nbsp&nbsp a). Rows and columns represent taxa.<br>&nbsp&nbsp b). Diagonal entries are 0 (distance from a taxon to itself).<br>&nbsp&nbsp c). Off-diagonal entries are the computed distances.</div><h4>Distance Matrix Calculation</h4><br>p-distance formula:d = (number of differences) / (compared sites)"];
+            
+            for (let i = 0; i < size; i++) {
+                for (let j = i+1; j < size; j++) {
+                    const seq1 = sequences[i];
+                    const seq2 = sequences[j];
+                    const minLength = Math.min(seq1.length, seq2.length);
+                    let differences = 0;
+                    
+                    for (let k = 0; k < minLength; k++) {
+                        if (seq1[k] !== seq2[k]) differences++;
+                    }
+                    
+                    const distance = differences / minLength;
+                    matrix[i][j] = matrix[j][i] = distance;
+                    
+                    explanations.push(`
+                        <div class="equation">
+                            D(${labels[i]}, ${labels[j]}) = 
+                            ${differences} differences / ${minLength} sites = ${distance.toFixed(4)}
+                        </div>
+                    `);
+                }
+            }
+            
+            document.getElementById("explanations").innerHTML = explanations.join("");
+            return matrix;
+        }
+
+        function updateMatrix(oldMatrix, mergedPair, labels) {
+            const [i, j] = mergedPair;
+            const newSize = oldMatrix.length - 1;
+            const newMatrix = Array.from({length: newSize}, () => new Array(newSize).fill(0));
+            let explanations = ["<h4>Cluster Merging Calculation</h4>"];
+            
+            explanations.push(`
+                <div class="equation">
+                    Merging clusters ${labels[i]} and ${labels[j]}<br>
+                    New distances calculated using formula: <br>
+                    D(new,k) = (D(${labels[i]},k) + D(${labels[j]},k) - D(${labels[i]},${labels[j]})) / 2
+                </div>
+            `);
+
+            // Copy unchanged values
+            let newRow = 0;
+            for (let x = 0; x < oldMatrix.length; x++) {
+                if (x === i || x === j) continue;
+                let newCol = 0;
+                for (let y = 0; y < oldMatrix.length; y++) {
+                    if (y === i || y === j) continue;
+                    newMatrix[newRow][newCol] = oldMatrix[x][y];
+                    newCol++;
+                }
+                newRow++;
+            }
+
+            // Calculate new distances
+            const d_ij = oldMatrix[i][j];
+            for (let k = 0; k < newSize - 1; k++) {
+                const originalIndex = k < Math.min(i, j) ? k : k + 1;
+                const d_ik = oldMatrix[i][originalIndex];
+                const d_jk = oldMatrix[j][originalIndex];
+                const newDist = (d_ik + d_jk - d_ij) / 2;
+                
+                explanations.push(`
+                    <div class="equation">
+                        D(new,${labels[originalIndex]}) = 
+                        (${d_ik.toFixed(4)} + ${d_jk.toFixed(4)} - ${d_ij.toFixed(4)}) / 2 = ${newDist.toFixed(4)}
+                    </div>
+                `);
+                
+                newMatrix[k][newSize-1] = newDist;
+                newMatrix[newSize-1][k] = newDist;
+            }
+
+            document.getElementById("explanations").innerHTML += explanations.join("");
+            return newMatrix;
+        }
+
+        function visualizeTree(treeData) {
+    const width = 1000, height = 600;
+    d3.select("#tree-container").html("");
+    const svg = d3.select("#tree-container").append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .append("g")
+        .attr("transform", "translate(50, 50)");
+
+    const root = d3.hierarchy(treeData);
+    const treeLayout = d3.tree().size([height-100, width-200]);
+    treeLayout(root);
+
+    // Draw links with reduced weight
+    svg.selectAll(".link")
+        .data(root.links())
+        .enter().append("path")
+        .attr("class", "link")
+        .attr("d", d3.linkHorizontal()
+            .x(d => d.y)
+            .y(d => d.x))
+        .style("stroke", "#1e88e5")
+        .style("stroke-width", 1)
+        .style("fill", "none");
+
+    // Add branch length labels
+    svg.selectAll(".branch-label")
+        .data(root.links())
+        .enter().append("text")
+        .attr("class", "branch-label")
+        .attr("x", d => (d.source.y + d.target.y) / 2)
+        .attr("y", d => (d.source.x + d.target.x) / 2)
+        .attr("text-anchor", "middle")
+        .attr("dy", "0.3em")
+        .text(d => d.target.data.distance?.toFixed(4) || "")
+        .style("font-size", "10px")
+        .style("fill", "#d63384");
+
+    // Draw nodes with reduced text size
+    svg.selectAll(".node")
+        .data(root.descendants())
+        .enter().append("text")
+        .attr("class", "node")
+        .attr("transform", d => `translate(${d.y},${d.x})`)
+        .text(d => d.data.name)
+        .style("fill", "#2e7d32")
+        .style("font-size", "12px");
+}
+
+function getClosestPairExplanation(matrix, labels) {
+            if (matrix.length < 2) return "<p>Only one cluster remaining.</p>";
+            const [i, j] = findMinPair(matrix);
+            const distance = matrix[i][j];
+            return `<p>Closest pair: ${labels[i]} and ${labels[j]} with distance ${distance.toFixed(4)}</p>`;
+        }
+        function processFile() {
+            const fileInput = document.getElementById("fileInput");
+            if (!fileInput.files[0]) {
+                alert("Please select a file first");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = e => {
+                try {
+                    const content = e.target.result;
+                    let labels = [], sequences = [];
+                    
+                    if(fileInput.files[0].name.match(/\.(fa|fasta)$/)) {
+                        content.split(">").slice(1).forEach(entry => {
+                            const [header, ...seq] = entry.split("\n");
+                            labels.push(header?.trim() || `Sequence_${labels.length+1}`);
+                            sequences.push(seq.join("").trim());
+                        });
+                    } else {
+                        sequences = content.split("\n").map(l => l.trim()).filter(l => l);
+                        labels = sequences.map((_,i) => String.fromCharCode(65+i));
+                    }
+
+                    if (sequences.length < 2) {
+                        throw new Error("At least 2 sequences required");
+                    }
+
+                    const matrix = computeDistanceMatrix(sequences, labels);
+                    algorithmState = {
+                        matrix: matrix,
+                        labels: labels,
+                        clusters: labels.map((l,i) => ({
+                            name: l,
+                            index: i,
+                            children: []
+                        }))
+                    };
+                    
+                    document.getElementById("controls").style.display = "block";
+                    document.getElementById("output").innerHTML = `<h3>Initial Matrix</h3>${displayMatrix(matrix, labels)}${getClosestPairExplanation(matrix, labels)}`;
+                    
+                    document.getElementById("nextBtn").disabled = false;
+                } catch (error) {
+                    alert(`Error processing file: ${error.message}`);
+                }
+            };
+            reader.readAsText(fileInput.files[0]);
+        }
+
+        function nextStep() {
+            if (!algorithmState || algorithmState.clusters.length <= 1) {
+                document.getElementById("nextBtn").disabled = true;
+                return;
+            }
+            
+            try {
+                const minPair = findMinPair(algorithmState.matrix);
+                if (minPair[0] >= algorithmState.clusters.length || 
+                    minPair[1] >= algorithmState.clusters.length) {
+                    throw new Error("Invalid cluster indices found");
+                }
+
+                const clusterA = algorithmState.clusters[minPair[0]];
+                const clusterB = algorithmState.clusters[minPair[1]];
+                const distance = algorithmState.matrix[minPair[0]][minPair[1]];
+
+                const newCluster = {
+                    name: `${clusterA.name}-${clusterB.name}`,
+                    children: [
+                        {...clusterA, distance: distance / 2},
+                        {...clusterB, distance: distance / 2}
+                    ]
+                };
+
+                // Update clusters first
+                algorithmState.clusters = [
+                    ...algorithmState.clusters.filter((_,i) => i !== minPair[0] && i !== minPair[1]),
+                    newCluster
+                ];
+
+                // Then update matrix
+                algorithmState.matrix = updateMatrix(algorithmState.matrix, minPair, algorithmState.labels);
+                
+                // Finally update labels
+                algorithmState.labels = algorithmState.clusters.map(c => c.name);
+
+                // Update display
+                document.getElementById("output").innerHTML = 
+                `<h3>Current Matrix</h3>${displayMatrix(algorithmState.matrix, algorithmState.labels)}` +
+                `${getClosestPairExplanation(algorithmState.matrix, algorithmState.labels)}` +
+                `<br><h3>Step ${++currentStep}</h3>` +
+                `<p>Merged ${clusterA.name} and ${clusterB.name} (distance: ${distance.toFixed(4)})</p>`;
+               
+                        
+                    
+
+                visualizeTree(newCluster);
+
+
+
+                if (algorithmState.clusters.length <= 1) {
+                    document.getElementById("nextBtn").disabled = true;
+                }
+            } catch (error) {
+                alert(`Error in next step: ${error.message}`);
+                document.getElementById("nextBtn").disabled = true;
+            }
+        }
+
+        function displayMatrix(matrix, labels) {
+            if (!matrix || !labels || matrix.length !== labels.length) {
+                return '<div class="error">Matrix display error</div>';
+            }
+            
+            let html = '<table><tr><th></th>';
+            labels.forEach(label => html += `<th>${label}</th>`);
+            html += '</tr>';
+            
+            matrix.forEach((row, i) => {
+                html += `<tr><th>${labels[i]}</th>`;
+                row.forEach(cell => {
+                    html += `<td>${cell?.toFixed(4) ?? 'N/A'}</td>`;
+                });
+                html += '</tr>';
+            });
+            
+            return html + '</table>';
+        }
+
+        function findMinPair(matrix) {
+            let min = Infinity, pair = [0, 1];
+            for (let i = 0; i < matrix.length; i++) {
+                for (let j = i + 1; j < matrix[i].length; j++) {
+                    if (matrix[i][j] < min) {
+                        min = matrix[i][j];
+                        pair = [i, j];
+                    }
+                }
+            }
+            return pair;
+        }
+    </script>
 </body>
 </html>
