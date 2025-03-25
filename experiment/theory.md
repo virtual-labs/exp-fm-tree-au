@@ -3,8 +3,11 @@
 According to evolution theory, the evolution of new organisms is driven when a DNA sequence is changed due to the insertion or deletion of bases of DNA segments (mutation). Speciation results in the formation of different species, and these species will share a common ancestor. A phylogenetic tree is a graph that represents approximate distance between a set of objects such as species, genes or families in a hierarchical fashion. Generally, a phylogenetic tree is critical in biological research as it represents the evolutionary relationship between different species or gene families. The graphical representation, like a tree, illustrates the evolutionary and phylogenetic relationships between biological data based on their physical appearance and genetic characteristics. The root represents the common ancestor of all entities in the tree. The leaves (tip) of the tree represent the sequence in the species, internal nodes are the hypothetical common ancestors, and the branch or edge length represents evolutionary distances. A phylogenetic tree is also known as a cladogram, tree of life, or evolutionary tree. 
 &nbsp;
 
+<img src="images/1.png" title="" />
+
  
 Figure 1. Representation of a phylogenetic tree
+
 (Scott AD, Baum DA. Phylogenetic Tree. In: Encyclopedia of Evolutionary Biology. Elsevier Inc.; 2016. p. 270–6)
 &nbsp;
 
@@ -90,6 +93,7 @@ To apply the FM algorithm, the first step is to calculate the genetic distance b
 
 •	A vs D: "ACTGGA" vs "TCTGCA" → 2 differences (A and G)
 
+<img src="images/2.png" title="" />
 
 &nbsp;
 
@@ -112,6 +116,8 @@ Repeat for steps for the next closest pair
 The smallest distance is 1.5 (between (A, C) and (B or D). Join B and D into a cluster. In the last step merge the final clusters. In this case merge (A, C) and (B, D) into a final tree (Figure 2).
  
 &nbsp;
+
+<img src="images/3.png" title="" />
 
 Figure 2. Representation of phylogenetic tree. A and C are closely related, and B and D are closely related. (A, C) and (B, D) form the evolutionary structure
 
