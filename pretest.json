@@ -1,0 +1,69 @@
+{
+  "version": 2.0,
+  "questions": [
+    {
+      "question": "1. Example of a distance-based algorithm",
+      "answers": {
+        "a": "Maximum Parsimony",
+        "b": "Maximum Likelihood",
+        "c": "Fitch Margoliash",
+        "d": "Bayesian Inference"
+      },
+      
+      "correctAnswer": "c",
+      "difficulty": "beginner"
+    },
+
+    {
+      "question": "2. Fitch-Margoliash algorithm constructs",
+      "answers": {
+        "a": "Rooted trees",
+        "b": "Unrooted trees",
+        "c": "Bifurcating trees",
+        "d": "Multifurcating trees"
+      },
+      
+      "correctAnswer": "b",
+      "difficulty": "beginner"
+    },
+
+    {
+      "question": "3. Branches of a phylogenetic tree represents",
+      "answers": {
+        "a": "Evolutionary distances",
+        "b": "Common ancestor",
+        "c": "Sequence length",
+        "d": "Hypothetical common ancestor"
+      },
+      
+      "correctAnswer": "a",
+      "difficulty": "beginner"
+    },
+
+    {
+      "question": "4. The input data required for the Fitch-Margoliash algorithm is",
+      "answers": {
+        "a": "Distance matrix",
+        "b": "DNA sequence",
+        "c": "Protein sequence",
+        "d": "None of the above"
+      },
+      
+      "correctAnswer": "a",
+      "difficulty": "beginner"
+    },
+    
+    {
+      "question": "5. The Fitch-Margoliash algorithm relies on minimizing the difference between observed and tree-based distances using",
+      "answers": {
+        "a": "Maximum Likelihood",
+        "b": "Least Squares",
+        "c": "Neighbor-Joining",
+        "d": "Maximum Parsimony"
+      },
+      
+      "correctAnswer": "b",
+      "difficulty": "beginner"
+    }
+  ]
+}
