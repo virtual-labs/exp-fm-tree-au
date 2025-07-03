@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fitch-Margoliash Algorithm Simulator</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/save-svg-as-png@1.4.17/lib/saveSvgAsPng.min.js"></script>
     <style>
        
         body {
@@ -103,8 +104,21 @@
             transition: background 0.3s ease;
         }
 
-        button:hover {
+         button:hover:not(:disabled) {
             background-color: 	#20B2AA;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        button:disabled {
+            background: linear-gradient(to right, #95a5a6, #7f8c8d);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
 
         .matrix-table {
@@ -308,12 +322,28 @@
     padding: 5px 0;
     border-bottom: 1px solid #eee;
 }
+
+        .progress-container {
+            height: 8px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, #3498db, #2c3e50);
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <img src="images\logo.png" alt="Logo" width="130" height="60">
+            <img src="logo.png" alt="Logo" width="130" height="60">
             <div class="at-item">Phylogenetic Tree Reconstruction Using Fitch-Margoliash Algorithm</div>
         </div>
 
@@ -338,13 +368,13 @@
                 <div class="step">Step 3: Create a new internal node that represents the common ancestor of the closest taxa.<br>
                     <span style='font-size:20px;'>&#9642;</span>Assign branch lengths to the new node using the weighted least-squares method.<br>
                     <span style='font-size:20px;'>&#9642;</span>The branch length from taxa to the new node is computed as:
-                    <img src="images\eq1.png" alt="eq1" width="300" height="80">
+                    <img src="eq1.png" alt="eq1" width="300" height="80">
                     Where 𝑋 is the new node, and 𝑛 is the total number of taxa.
 
                 </div>
                 <div class="step">Step 4: Update the Distance Matrix
                 <span style='font-size:20px;'>&#9642;</span>Compute distances from X to all other taxa using the formula:<br>
-                <img src="images\eq2.png" alt="eq2" width="300" height="80"></div>
+                <img src="eq2.png" alt="eq2" width="300" height="80"></div>
             
                 <div class="step">Step 5: Repeat Steps 2-4 Until Only One Node Remains</div>
                 <div class="step"> Step 6: Construct the Phylogenetic Tree</div>
@@ -355,38 +385,99 @@
             <div class="card ">
                 <b>Upload File:</b><input type="file" id="fileInput" accept=".txt,.fa,.fasta">
                 
-                    <a href="ms1.txt" download style="color: #44a7f8;"><small>Sample Text File</small></a>&nbsp;&nbsp;
-                    <a href="sample.fa" download style="color: #44a7f8;"><small>Sample FASTA</small></a><br><br>
+                    <a href="sample_file.txt" download style="color: #44a7f8;"><small>Sample Text File</small></a>&nbsp;&nbsp;
+                    <a href="sample_fasta.fa" download style="color: #44a7f8;"><small>Sample FASTA</small></a><br><br>
                 
                 <button onclick="processFile()">Run Algorithm</button>
                 <button onclick="location.reload()">Reset</button>
             </div>
         </div>
 
-        <div class="grid-container1" id="mainResults" style="display: none;">
-            <div class="main">
-                <div style="position: relative; margin: 20px 0;">
-                    <div id="sequence-key" class="card" style="display: none; margin: 20px 0;">
-                    <h3>Sequence Labels</h3>
-                    <div id="sequence-labels-list"></div>
-                </div>
+        <div id="mainResults" style="display: none;">
+            <div class="grid-container1">
+                <div class="main">
+                    <div id="sequence-key" class="card" style="display: none;">
+                        <h3>Sequence Labels</h3>
+                        <div id="sequence-labels-list"></div>
+                    </div>
+                    
+                    <div class="progress-container">
+                        <div class="progress-bar" id="progressBar"></div>
+                    </div>
+                    
+                    <div id="status-message" class="status-banner"></div>
+                    
                     <div class="matrix-table" id="output"></div>
+                    <div class="export-controls">
+                        <button onclick="downloadMatrix()">
+                            <i class="fas fa-download download-icon"></i>Download Distance Matrix
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="main">
+                    <div id="explanations" class="card"></div>
+                    <div id="controls" style="display: none; text-align: center; margin-top: 25px;">
+                        <button onclick="nextStep()" id="nextBtn">Next Step</button>
+                    </div>
                 </div>
             </div>
-            <div class="main">
-                <div id="explanations" class="card" style="margin-top: 20px; padding: 15px;"></div>
-                <div id="controls" style="display: none;"><br><br>
-                    <button onclick="nextStep()" id="nextBtn">Next Step</button>
+             
+           <div id="tree-container">
+                <div class="tree-controls">
+                    <button onclick="zoomIn()">
+                        <i class="fas fa-search-plus"></i> <span>Zoom In</span>
+                    </button>
+                    <button onclick="zoomOut()">
+                        <i class="fas fa-search-minus"></i> <span>Zoom Out</span>
+                    </button>
+                    <button onclick="downloadTreeImage('svg')">
+                        <i class="fas fa-download"></i> <span>SVG</span>
+                    </button>
+                    <button onclick="downloadTreeImage('png')">
+                        <i class="fas fa-download"></i> <span>PNG</span>
+                    </button>
                 </div>
+                <div id="tree-svg-container"></div>
             </div>
-            <div id="tree-container"></div>
+           
         </div>
+    </div>
         
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script>
         let algorithmState = null;
         let currentStep = 0;
+          let isProcessing = false;
+          
+           // Function to update the status message
+          // Function to update the status message
+        function updateStatus(message, type) {
+            const statusElement = document.getElementById('status-message');
+            statusElement.textContent = message;
+            statusElement.className = 'status-banner';
+            
+            switch(type) {
+                case 'success':
+                    statusElement.style.color = '#155724';
+                    statusElement.style.backgroundColor = '#d4edda';
+                    break;
+                case 'info':
+                    statusElement.style.color = '#0c5460';
+                    statusElement.style.backgroundColor = '#d1ecf1';
+                    break;
+                case 'error':
+                    statusElement.style.color = '#721c24';
+                    statusElement.style.backgroundColor = '#f8d7da';
+                    break;
+            }
+        }
+        
+        // Function to update progress bar
+        function updateProgress(percent) {
+            document.getElementById('progressBar').style.width = percent + '%';
+        }
 
         function computeDistanceMatrix(sequences, labels) {
             const size = sequences.length;
@@ -417,11 +508,11 @@
             }
             
             const explanationsElement = document.getElementById("explanations");
-    if (explanationsElement) {
-        explanationsElement.innerHTML = explanations.join("");
-    }
-    
-    return matrix;
+            if (explanationsElement) {
+                explanationsElement.innerHTML = explanations.join("");
+            }
+            
+            return matrix;
         }
 
         function updateMatrix(oldMatrix, mergedPair, labels) {
@@ -471,38 +562,38 @@
             }
 
             const explanationsElement = document.getElementById("explanations");
-    if (explanationsElement) {
-        explanationsElement.innerHTML += explanations.join("");
-    }
-    
-    return newMatrix;
+            if (explanationsElement) {
+                explanationsElement.innerHTML += explanations.join("");
+            }
+            
+            return newMatrix;
         }
 
         function visualizeTree(treeData) {
-            const width = 1200, height = 800;
-            const zoom = d3.zoom().scaleExtent([0.1, 5]).on('zoom', zoomed);
+            const container = d3.select("#tree-svg-container");
+            container.html("");
             
-            const container = d3.select("#tree-container")
-                .html("")
-                .append("svg")
+            const width = document.getElementById("tree-container").clientWidth;
+            const height = document.getElementById("tree-container").clientHeight;
+            
+            const svg = container.append("svg")
                 .attr("width", width)
                 .attr("height", height)
-                .call(zoom);
+                .attr("id", "tree-svg")
+                .attr("viewBox", `0 0 ${width} ${height}`)
+                .attr("preserveAspectRatio", "xMidYMid meet");
+            
+            // Create zoom behavior
+            const zoom = d3.zoom()
+                .scaleExtent([0.1, 5])
+                .on('zoom', (event) => {
+                    currentTreeG.attr("transform", event.transform);
+                });
+                
+            currentTreeZoom = zoom;
+            svg.call(zoom);
 
-            // Add zoom controls
-            const zoomControls = container.append("foreignObject")
-                .attr("x", 10)
-                .attr("y", 10)
-                .attr("width", 100)
-                .attr("height", 40)
-                .append("xhtml:div")
-                .attr("class", "zoom-controls")
-                .html(`
-                    <button onclick="zoomIn()">+</button>
-                    <button onclick="zoomOut()">-</button>
-                `);
-
-            const g = container.append("g")
+            currentTreeG = svg.append("g")
                 .attr("transform", "translate(50, 50)");
 
             const root = d3.hierarchy(treeData);
@@ -510,291 +601,312 @@
             treeLayout(root);
 
             // Draw links
-            const links = g.selectAll(".link")
+            const links = currentTreeG.selectAll(".link")
                 .data(root.links())
                 .enter().append("path")
                 .attr("class", "link")
                 .attr("d", d3.linkHorizontal()
                     .x(d => d.y)
                     .y(d => d.x))
-                .style("stroke", "#1e88e5")
-                .style("stroke-width", 5)
+                .style("stroke", "#20B2AA")
+                .style("stroke-width", 3)
                 .style("fill", "none")
-                .on("mouseover", function(d) {
-                    d3.select(this).style("stroke", "#ff5722");
-                    showTooltip(d, this);
+                .on("mouseover", function(event, d) {
+                    d3.select(this).style("stroke", "#FF6B6B");
+                    showTooltip(event, `Branch from ${d.source.data.name} to ${d.target.data.name}<br>Length: ${d.target.data.distance?.toFixed(4) || '0.0000'}`);
                 })
                 .on("mouseout", function() {
-                    d3.select(this).style("stroke", "#1e88e5");
+                    d3.select(this).style("stroke", "#20B2AA");
                     hideTooltip();
                 });
 
             // Add branch labels
-            const branchLabels = g.selectAll(".branch-label")
-        .data(root.links())
-        .enter().append("text")
-        .attr("class", "branch-label")
-        .attr("x", d => (d.source.y + d.target.y) / 2)
-        .attr("y", d => (d.source.x + d.target.x) / 2)
-        .attr("text-anchor", "middle")
-        .attr("dy", "0.6em")
-        .text(d => d.target.data.distance?.toFixed(4) || "")
-        .style("font-size", "26px")  // Increased from 20px
-        .style("fill", "#2e7d32");
+            const branchLabels = currentTreeG.selectAll(".branch-label")
+                .data(root.links())
+                .enter().append("text")
+                .attr("class", "branch-label")
+                .attr("x", d => (d.source.y + d.target.y) / 2)
+                .attr("y", d => (d.source.x + d.target.x) / 2)
+                .attr("text-anchor", "middle")
+                .attr("dy", "0.6em")
+                .text(d => d.target.data.distance?.toFixed(4) || "")
+                .style("font-size", "14px")
+                .style("fill", "#2c3e50")
+                .style("font-weight", "bold");
 
             // Draw nodes
-            const nodes = g.selectAll(".node")
+            const nodes = currentTreeG.selectAll(".node")
                 .data(root.descendants())
                 .enter().append("g")
                 .attr("class", "node")
                 .attr("transform", d => `translate(${d.y},${d.x})`)
-                .on("mouseover", function(d) {
-                    d3.select(this).select("text").style("fill", "#ff5722");
-                    showTooltip(d, this);
+                .on("mouseover", function(event, d) {
+                    d3.select(this).select("text").style("fill", "#FF6B6B");
+                    const content = d.data.children 
+                        ? `Cluster: ${d.data.name}`
+                        : `Leaf: ${d.data.name}`;
+                    showTooltip(event, content);
                 })
-                .on("mouseout", function(d) {
-                    d3.select(this).select("text").style("fill", "#e3276c");
+                .on("mouseout", function() {
+                    d3.select(this).select("text").style("fill", "#2c3e50");
                     hideTooltip();
                 })
-                .on("click", d => {
-                    alert(`Node: ${d.data.name}\nDistance: ${d.data.distance?.toFixed(4) || 'N/A'}`);
+                .on("click", (event, d) => {
+                    alert(`Node: ${d.data.name}\nDistance: ${d.data.distance?.toFixed(4) || '0.0000'}`);
                 });
 
             nodes.append("circle")
-                .attr("r", 4)
-                .style("fill", "#e3276c");
+                .attr("r", 6)
+                .style("fill", "#FF6B6B")
+                .style("stroke", "#ffffff")
+                .style("stroke-width", 2);
 
-                nodes.append("text")
-        .attr("dx", 8)
-        .attr("dy", 3)
-        .text(d => d.data.name)
-        .style("fill", "#2e7d32")
-        .style("font-size", "26px")  // Increased from 20px
-        .style("font-weight", "bold");
-            function zoomed(event) {
-                g.attr("transform", event.transform);
+            nodes.append("text")
+                .attr("dx", 10)
+                .attr("dy", 5)
+                .text(d => d.data.name)
+                .style("fill", "#2c3e50")
+                .style("font-size", "16px")
+                .style("font-weight", "bold");
+                
+            // Store the SVG reference
+            currentTreeSvg = document.getElementById("tree-svg");
+        }
+            function showTooltip(event, content) {
+            let tooltip = d3.select("#tooltip");
+            if (tooltip.empty()) {
+                tooltip = d3.select("body")
+                    .append("div")
+                    .attr("id", "tooltip")
+                    .attr("class", "tooltip")
+                    .style("opacity", 0);
             }
-
-            window.zoomIn = () => {
-                container.transition().call(zoom.scaleBy, 1.2);
-            }
-
-            window.zoomOut = () => {
-                container.transition().call(zoom.scaleBy, 0.8);
-            }
-            function showTooltip(d, element) {
-    // Add null checks for data object
-    const nodeData = d.data || {};
-    const [x, y] = d3.pointer(event, container.node());
-    const tooltip = d3.select("#tooltip");
-    
-    if (!tooltip.node()) {
-        d3.select("body").append("div")
-            .attr("id", "tooltip")
-            .style("position", "absolute")
-            .style("background", "white")
-            .style("padding", "8px")
-            .style("border", "1px solid #ddd")
-            .style("border-radius", "4px")
-            .style("pointer-events", "none");
-    }
-
-    // Modified content creation with null checks
-    const content = nodeData.children 
-        ? `Cluster: ${nodeData.name || 'Unnamed Cluster'}`
-        : `Node: ${nodeData.name || 'Unnamed Node'}<br>Distance: ${nodeData.distance?.toFixed(4) || 'N/A'}`;
-
-    d3.select("#tooltip")
-        .html(content)
-        .style("left", `${x + 15}px`)
-        .style("top", `${y + 15}px`)
-        .style("opacity", 1);
-}
-
-            function hideTooltip() {
-                d3.select("#tooltip").style("opacity", 0);
-            }
+            
+            tooltip.html(content)
+                .style("left", (event.pageX + 15) + "px")
+                .style("top", (event.pageY - 30) + "px")
+                .transition()
+                .duration(200)
+                .style("opacity", 1);
         }
 
-         // Add matrix hover effects
-         function addMatrixInteractivity() {
-            const table = document.querySelector('.matrix-table table');
-            if (!table) return;
-
-            const cells = table.getElementsByTagName('td');
-            const headers = table.getElementsByTagName('th');
-
-            Array.from(cells).forEach(cell => {
-                cell.addEventListener('mouseover', function(e) {
-                    const col = this.cellIndex;
-                    const row = this.parentElement.rowIndex;
-                    
-                    // Highlight column and row
-                    Array.from(table.rows).forEach(r => {
-                        r.cells[col].classList.add('highlight-col');
-                    });
-                    Array.from(table.rows[row].cells).forEach(c => {
-                        c.classList.add('highlight-row');
-                    });
-                });
-
-                cell.addEventListener('mouseout', function(e) {
-                    // Remove all highlights
-                    Array.from(table.getElementsByTagName('td')).forEach(c => {
-                        c.classList.remove('highlight-col', 'highlight-row');
-                    });
-                });
-            });
+        function hideTooltip() {
+            d3.select("#tooltip")
+                .transition()
+                .duration(200)
+                .style("opacity", 0)
+                .remove();
         }
+        
 
-
-function getClosestPairExplanation(matrix, labels) {
+        function getClosestPairExplanation(matrix, labels) {
             if (matrix.length < 2) return "<p>Only one cluster remaining.</p>";
             const [i, j] = findMinPair(matrix);
             const distance = matrix[i][j];
             return `<p>Closest pair: ${labels[i]} and ${labels[j]} with distance ${distance.toFixed(4)}</p>`;
         }
+
         function processFile() {
+            if (isProcessing) return;
             const fileInput = document.getElementById("fileInput");
-    if (!fileInput.files[0]) {
-        alert("Please select a file first");
-        return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = e => {
-        try {
-            const content = e.target.result;
-            let labels = [], sequences = [], sequenceNames = [];
-            
-            if(fileInput.files[0].name.match(/\.(fa|fasta)$/)) {
-                content.split(">").slice(1).forEach((entry, index) => {
-                    const [header, ...seq] = entry.split("\n");
-                    const name = header?.trim().split(/\s+/)[0] || `Sequence ${index+1}`;
-                    sequenceNames.push(name);
-                    labels.push(String.fromCharCode(65+index)); // Generate A, B, C...
-                    sequences.push(seq.join("").trim());
-                });
-            } else {
-                sequences = content.split("\n").map(l => l.trim()).filter(l => l);
-                labels = sequences.map((_,i) => String.fromCharCode(65+i));
-                sequenceNames = sequences.map((seq, i) => `Sequence ${String.fromCharCode(65+i)}`);
+            if (!fileInput.files[0]) {
+                updateStatus("Please select a file first", "error");
+                return;
             }
+      
+            isProcessing = true;
+            updateStatus("Processing file...", "info");
+            updateProgress(0);
 
-            // Show sequence labels
-            const sequenceKey = document.getElementById("sequence-labels-list");
-            sequenceKey.innerHTML = labels.map((label, index) => 
-                `<div class="step">
-                    <b>${label}:</b> ${sequenceNames[index]}
-                </div>`
-            ).join('');
-            document.getElementById("sequence-key").style.display = "block";
-
-            if (sequences.length < 2) {
-                throw new Error("At least 2 sequences required");
-            }
-
-            const matrix = computeDistanceMatrix(sequences, labels);
-            algorithmState = {
-                matrix: matrix,
-                labels: labels,
-                sequenceNames: sequenceNames,
-                clusters: labels.map((l,i) => ({
-                    name: l,
-                    index: i,
-                    children: []
-                }))
-            };
-            
-            
+            const reader = new FileReader();
+            reader.onload = e => {
+                try {
+                    const content = e.target.result;
+                    labels = [];
+                    sequences = [];
+                    sequenceNames = [];
                     
+                    if(fileInput.files[0].name.match(/\.(fa|fasta)$/)) {
+                        content.split(">").slice(1).forEach((entry, index) => {
+                            const [header, ...seq] = entry.split("\n");
+                            const name = header?.trim().split(/\s+/)[0] || `Sequence ${index+1}`;
+                            sequenceNames.push(name);
+                            labels.push(String.fromCharCode(65+index));
+                            sequences.push(seq.join("").trim());
+                        });
+                    } else {
+                        sequences = content.split("\n").map(l => l.trim()).filter(l => l);
+                        labels = sequences.map((_,i) => String.fromCharCode(65+i));
+                        sequenceNames = sequences.map((seq, i) => `Sequence ${String.fromCharCode(65+i)}`);
+                    }
+
+                    // Show sequence labels
+                    const sequenceKey = document.getElementById("sequence-labels-list");
+                    sequenceKey.innerHTML = labels.map((label, index) => 
+                        `<div class="step">
+                            <b>${label}:</b> ${sequenceNames[index]}
+                        </div>`
+                    ).join('');
+                    document.getElementById("sequence-key").style.display = "block";
+
+                    if (sequences.length < 2) {
+                        throw new Error("At least 2 sequences required");
+                    }
+
+                    const matrix = computeDistanceMatrix(sequences, labels);
+                    algorithmState = {
+                        matrix: matrix,
+                        labels: labels,
+                        sequenceNames: sequenceNames,
+                        clusters: labels.map((l,i) => ({
+                            name: l,
+                            index: i,
+                            children: []
+                        }))
+                    };
+                    
+                    // Show results section
+                    document.getElementById("mainResults").style.display = "block";
                     document.getElementById("controls").style.display = "block";
-                    document.getElementById("output").innerHTML = `<h3>Initial Matrix</h3>${displayMatrix(matrix, labels)}${getClosestPairExplanation(matrix, labels)}`;
-                    
+                    document.getElementById("output").innerHTML = `<h3>Initial Distance Matrix</h3>${displayMatrix(matrix, labels)}${getClosestPairExplanation(matrix, labels)}`;
                     document.getElementById("nextBtn").disabled = false;
-                    document.getElementById("mainResults").style.display = "grid";
-            document.getElementById("controls").style.display = "block";
-            document.getElementById("output").style.display = "block";
-            document.getElementById("explanations").style.display = "block";
-            document.getElementById("tree-container").style.display = "block";
+                    
+                    updateStatus("File processed successfully. Ready for clustering.", "success");
+                    isProcessing = false;
+                    updateProgress(100);
+                    
+                    // Visualize initial state (all separate nodes)
+                    visualizeInitialState(labels);
+                    
                 } catch (error) {
-                    alert(`Error processing file: ${error.message}`);
+                    updateStatus(`Error: ${error.message}`, "error");
+                    isProcessing = false;
                 }
             };
             reader.readAsText(fileInput.files[0]);
-            setTimeout(addMatrixInteractivity, 0);
+        }
+        
+         function visualizeInitialState(labels) {
+            const container = d3.select("#tree-svg-container")
+                .html("")
+                .append("svg")
+                .attr("width", "100%")
+                .attr("height", "100%");
+            
+            const width = document.getElementById("tree-container").clientWidth;
+            const height = document.getElementById("tree-container").clientHeight;
+            const nodeSpacing = width / (labels.length + 1);
+            
+            const g = container.append("g");
+            
+            labels.forEach((label, i) => {
+                const x = nodeSpacing * (i + 1);
+                const y = height / 2;
+                
+                g.append("circle")
+                    .attr("cx", x)
+                    .attr("cy", y)
+                    .attr("r", 8)
+                    .style("fill", "#20B2AA");
+                
+                g.append("text")
+                    .attr("x", x)
+                    .attr("y", y + 30)
+                    .attr("text-anchor", "middle")
+                    .text(label)
+                    .style("font-size", "18px")
+                    .style("fill", "#2c3e50")
+                    .style("font-weight", "bold");
+            });
+            
+            g.append("text")
+                .attr("x", width/2)
+                .attr("y", 40)
+                .attr("text-anchor", "middle")
+                .text("Initial State - No Clustering Performed Yet")
+                .style("font-size", "20px")
+                .style("fill", "#20B2AA")
+                .style("font-weight", "bold");
         }
 
         function nextStep() {
-            if (!algorithmState || algorithmState.clusters.length <= 1) {
-        document.getElementById("nextBtn").disabled = true;
-        return;
-    }
-    
-    try {
-        const minPair = findMinPair(algorithmState.matrix);
-        if (minPair[0] >= algorithmState.clusters.length || 
-            minPair[1] >= algorithmState.clusters.length) {
-            throw new Error("Invalid cluster indices found");
+            if (isProcessing || !algorithmState) return;
+            
+            // Check if clustering is complete
+            if (algorithmState.clusters.length <= 1) {
+                document.getElementById("nextBtn").disabled = true;
+                updateStatus("Clustering complete! No more steps available.", "info");
+                return;
+            }
+            
+            isProcessing = true;
+            updateStatus("Performing clustering step...", "info");
+            
+            try {
+                const minPair = findMinPair(algorithmState.matrix);
+                const clusterA = algorithmState.clusters[minPair[0]];
+                const clusterB = algorithmState.clusters[minPair[1]];
+                const distance = algorithmState.matrix[minPair[0]][minPair[1]];
+                
+                // Create new cluster
+                const newCluster = {
+                    name: `${clusterA.name}-${clusterB.name}`,
+                    children: [
+                        { 
+                            name: clusterA.name,
+                            children: clusterA.children,
+                            distance: distance / 2 
+                        },
+                        { 
+                            name: clusterB.name,
+                            children: clusterB.children,
+                            distance: distance / 2 
+                        }
+                    ]
+                };
+                
+                // Update clusters
+                algorithmState.clusters = [
+                    ...algorithmState.clusters.filter((_,i) => i !== minPair[0] && i !== minPair[1]),
+                    newCluster
+                ];
+                
+                // Check if clustering is complete
+                if (algorithmState.clusters.length <= 1) {
+                    document.getElementById("output").innerHTML = 
+                        `<h3>Final Cluster</h3>` +
+                        `<p>Clustering complete! Final cluster: ${newCluster.name}</p>`;
+                    visualizeTree(newCluster);
+                    updateStatus("Clustering complete! Final tree generated.", "success");
+                    document.getElementById("nextBtn").disabled = true;
+                    isProcessing = false;
+                    return;
+                }
+                
+                // Update distance matrix
+                algorithmState.matrix = updateMatrix(algorithmState.matrix, minPair, algorithmState.labels);
+                algorithmState.labels = algorithmState.clusters.map(c => c.name);
+                
+                // Update display
+                document.getElementById("output").innerHTML = 
+                    `<h3>Step ${++currentStep} - Current Matrix</h3>${displayMatrix(algorithmState.matrix, algorithmState.labels)}` +
+                    `${getClosestPairExplanation(algorithmState.matrix, algorithmState.labels)}` +
+                    `<p>Merged clusters: ${clusterA.name} and ${clusterB.name} (distance: ${distance.toFixed(4)})</p>`;
+                
+                // Visualize current tree
+                visualizeTree(newCluster);
+                
+                updateStatus("Clustering step completed successfully.", "success");
+                isProcessing = false;
+                
+            } catch (error) {
+                updateStatus(`Error: ${error.message}`, "error");
+                isProcessing = false;
+            }
+            
+            // Update button state
+            document.getElementById("nextBtn").disabled = algorithmState.clusters.length <= 1;
         }
-
-        const clusterA = algorithmState.clusters[minPair[0]];
-        const clusterB = algorithmState.clusters[minPair[1]];
-        const distance = algorithmState.matrix[minPair[0]][minPair[1]];
-
-        const newCluster = {
-    name: `${clusterA.name}-${clusterB.name}`,
-    children: [
-        // Preserve original cluster structure
-        { 
-            name: clusterA.name,
-            children: clusterA.children,
-            distance: distance / 2 
-        },
-        { 
-            name: clusterB.name,
-            children: clusterB.children,
-            distance: distance / 2 
-        }
-    ]
-};
-
-        // Update clusters and check completion immediately
-        algorithmState.clusters = [
-            ...algorithmState.clusters.filter((_,i) => i !== minPair[0] && i !== minPair[1]),
-            newCluster
-        ];
-
-        // Immediate completion check after cluster update
-        if (algorithmState.clusters.length <= 1) {
-            document.getElementById("nextBtn").disabled = true;
-            document.getElementById("output").innerHTML = 
-                `<h3>Final Cluster</h3>` +
-                `<p>Clustering complete! Final cluster: ${newCluster.name}</p>`;
-            visualizeTree(newCluster);
-            return; // Exit early to prevent further processing
-        }
-
-        // Continue with matrix updates only if not complete
-        algorithmState.matrix = updateMatrix(algorithmState.matrix, minPair, algorithmState.labels);
-        algorithmState.labels = algorithmState.clusters.map(c => c.name);
-
-        // Update display
-        document.getElementById("output").innerHTML = 
-            `<h3>Current Matrix</h3>${displayMatrix(algorithmState.matrix, algorithmState.labels)}` +
-            `${getClosestPairExplanation(algorithmState.matrix, algorithmState.labels)}` +
-            `<br><h3>Step ${++currentStep}</h3>` +
-            `<p>Merged ${clusterA.name} and ${clusterB.name} (distance: ${distance.toFixed(4)})</p>`;
-
-        visualizeTree(newCluster);
-
-    } catch (error) {
-        alert(`Error in next step: ${error.message}`);
-        
-    }
-    document.getElementById("nextBtn").disabled = algorithmState.clusters.length <= 1;
-    setTimeout(addMatrixInteractivity, 0);
-}
 
         function displayMatrix(matrix, labels) {
             if (!matrix || !labels || matrix.length !== labels.length) {
@@ -827,6 +939,73 @@ function getClosestPairExplanation(matrix, labels) {
                 }
             }
             return pair;
+        }
+        
+        // Export functions
+          function downloadMatrix() {
+            if (!algorithmState) {
+                alert("No data to export");
+                return;
+            }
+            
+            let csvContent = "Taxa," + algorithmState.labels.join(",") + "\n";
+            
+            for (let i = 0; i < algorithmState.matrix.length; i++) {
+                const row = algorithmState.labels[i] + "," + 
+                            algorithmState.matrix[i].map(val => val.toFixed(4)).join(",");
+                csvContent += row + "\n";
+            }
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'distance_matrix.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+         function downloadTreeImage(format) {
+            const svgElement = document.getElementById("tree-svg");
+            if (!svgElement) {
+                alert("No tree to export");
+                return;
+            }
+            
+            if (format === 'png') {
+                // Use saveSvgAsPng library for PNG export
+                saveSvgAsPng(svgElement, "phylogenetic_tree.png", {
+                    scale: 2,
+                    backgroundColor: 'white'
+                });
+            } else if (format === 'svg') {
+                // Create SVG download
+                const svgData = new XMLSerializer().serializeToString(svgElement);
+                const blob = new Blob([svgData], {type: "image/svg+xml"});
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "phylogenetic_tree.svg";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        // Update the zoom controls to use these functions
+       // Zoom functions
+        function zoomIn() {
+            if (currentTreeZoom) {
+                d3.select("#tree-svg").call(currentTreeZoom.scaleBy, 1.2);
+            }
+        }
+
+        function zoomOut() {
+            if (currentTreeZoom) {
+                d3.select("#tree-svg").call(currentTreeZoom.scaleBy, 0.8);
+            }
         }
     </script>
 </body>
