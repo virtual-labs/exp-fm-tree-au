@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitch-Margoliash Algorithm Simulator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/save-svg-as-png@1.4.17/lib/saveSvgAsPng.min.js"></script>
+    <style>
+       
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500vh;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            background-image: linear-gradient(white, #20B2AA);
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .at-item {
+            color: #802652;
+            font-weight: bold;
+            font-size: 1.5em;
+            flex-grow: 1;
+        }
+
+        .grid-container2 {
+            display: grid;
+            grid-template-columns:1fr 1fr 1fr ;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .grid-container1 {
+            display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto 1fr; /* Add row for tree container */
+    gap: 20px;
+    margin-top: 20px;
+    grid-auto-rows: 1fr;
+        }
+        label {
+            padding: 10px 20px;
+            background-color: 	#008080;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            justify-content: center;
+            font-family: sans-serif;   
+            display: inline-block;  /* Change display type */
+            width: 90%;       
+            text-align: center;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+
+
+        .file-upload-section {
+            margin-top: 20px;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: 	#008080;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+         button:hover:not(:disabled) {
+            background-color: 	#20B2AA;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        button:disabled {
+            background: linear-gradient(to right, #95a5a6, #7f8c8d);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .matrix-table {
+            overflow-x: auto;
+            max-width: 100%;
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .matrix-table table {
+            overflow-x: auto;
+    max-width: 100%;
+    margin: 20px 0;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    /* Grow to fill available space */
+    flex-grow: 1;
+        }
+
+        /* Matrix hover effects */
+        td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: center;
+        min-width: 80px;
+    }
+
+        .highlight-col {
+            background: #f0f8ff !important;
+        }
+
+        .highlight-row {
+            background: #f0f8ff !important;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            background: white;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+            min-width: 80px;
+        }
+
+        th {
+            background-color: 	#20B2AA;
+            color: white;
+        }
+
+        #tree-container {
+            width: 100%;
+    height: 80vh; /* Use viewport height units */
+    min-height: 400px; /* Minimum height */
+    overflow: auto;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    position: relative;
+    grid-column: 1 / -1; /* Span across all columns */
+    margin-top: 40px;
+        }
+         /* Zoom controls */
+         .zoom-controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+        }
+
+        .zoom-controls button {
+            padding: 5px 10px;
+            margin: 0 5px;
+            background: #20B2AA;
+            border: none;
+            color: white;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .step {
+            background: #fff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-size: 0.9em;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                width: 100%;
+                margin: 10px auto;
+                padding: 10px;
+            }
+
+            .at-item {
+                font-size: 1.2em;
+            }
+
+            .header img {
+                width: 100px;
+                height: auto;
+            }
+
+            button {
+                width: 100%;
+                margin: 5px 0;
+            }
+
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            th, td {
+                padding: 6px;
+                font-size: 0.9em;
+            }
+
+            .at-item {
+                font-size: 1em;
+            }
+
+            .step {
+                padding: 10px;
+                font-size: 0.5em;
+            }
+        }
+
+        .main {
+            background-color: #e8f5f5;
+    padding: 10px;
+    border-radius: 10px;
+    margin-top: 5%;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    /* Set minimum height and ensure equal height */
+    min-height: 500px; /* Adjust this value as needed */
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+        }
+
+        #explanations {
+            max-height: 400px;
+    overflow-y: auto;
+    padding: 15px;
+    margin-top: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    /* Grow to fill available space */
+    flex-grow: 1;
+    }
+
+    /* Custom scrollbar styling */
+    #explanations::-webkit-scrollbar {
+        width: 8px;
+    }
+    #explanations::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+    #explanations::-webkit-scrollbar-thumb {
+        background: #20B2AA;
+        border-radius: 4px;
+    }
+    #explanations::-webkit-scrollbar-thumb:hover {
+        background: #1E90FF;
+    }
+    .tooltip {
+    position: absolute;
+    background: white;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    pointer-events: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.node.active text {
+    fill: #ff5722 !important;
+}
+
+.link:hover {
+    stroke: #ff5722 !important;
+}
+
+#mainResults {
+    display: none; /* Hidden by default */
+}
+#sequence-key {
+    margin: 20px 0;
+}
+
+#sequence-key .card div {
+    font-family: monospace;
+    padding: 5px 0;
+    border-bottom: 1px solid #eee;
+}
+
+        .progress-container {
+            height: 8px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, #3498db, #2c3e50);
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="images\logo.png" alt="Logo" width="130" height="60">
+            <div class="at-item">Phylogenetic Tree Reconstruction Using Fitch-Margoliash Algorithm</div>
+        </div>
+
+        <div class="grid-container">
+            
+            <div class="card">
+                <label>Instruction</label>
+                
+                <div class="step">1. Upload Data File: Click "Choose file" to upload your input file (.txt/FASTA format)</div>
+                <div class="step">2. Click "Sample Text file" to obtain a sample text file format or Click "Sample FASTA" to obtain a sample FASTA file format </div>
+                <div class="step">3. Click to 'Run Algorithm' to get the result.</div>
+                <div class="step">4. Click to 'Next Step' to do clustering.</div>
+            
+                <div class="step">6. Reset to start over</div>
+            </div>
+
+            <div class="card">
+                <label>Steps in Fitch-Margoliash algorithm</label>
+                
+                <div class="step">Step 1: Compute the Pairwise Distance Matrix</div>
+                <div class="step">Step 2: Identify the Closest Pair of Taxa</div>
+                <div class="step">Step 3: Create a new internal node that represents the common ancestor of the closest taxa.<br>
+                    <span style='font-size:20px;'>&#9642;</span>Assign branch lengths to the new node using the weighted least-squares method.<br>
+                    <span style='font-size:20px;'>&#9642;</span>The branch length from taxa to the new node is computed as:
+                    <img src="images\eq1.png" alt="eq1" width="300" height="80">
+                    Where 𝑋 is the new node, and 𝑛 is the total number of taxa.
+
+                </div>
+                <div class="step">Step 4: Update the Distance Matrix
+                <span style='font-size:20px;'>&#9642;</span>Compute distances from X to all other taxa using the formula:<br>
+                <img src="images\eq2.png" alt="eq2" width="300" height="80"></div>
+            
+                <div class="step">Step 5: Repeat Steps 2-4 Until Only One Node Remains</div>
+                <div class="step"> Step 6: Construct the Phylogenetic Tree</div>
+                    
+                
+            </div>
+
+            <div class="card ">
+                <b>Upload File:</b><input type="file" id="fileInput" accept=".txt,.fa,.fasta">
+                
+                    <a href="sample_file.txt" download style="color: #44a7f8;"><small>Sample Text File</small></a>&nbsp;&nbsp;
+                    <a href="sample_fasta.fa" download style="color: #44a7f8;"><small>Sample FASTA</small></a><br><br>
+                
+                <button onclick="processFile()">Run Algorithm</button>
+                <button onclick="location.reload()">Reset</button>
+            </div>
+        </div>
+
+        <div id="mainResults" style="display: none;">
+            <div class="grid-container1">
+                <div class="main">
+                    <div id="sequence-key" class="card" style="display: none;">
+                        <h3>Sequence Labels</h3>
+                        <div id="sequence-labels-list"></div>
+                    </div>
+                    
+                    <div class="progress-container">
+                        <div class="progress-bar" id="progressBar"></div>
+                    </div>
+                    
+                    <div id="status-message" class="status-banner"></div>
+                    
+                    <div class="matrix-table" id="output"></div>
+                    <div class="export-controls">
+                        <button onclick="downloadMatrix()">
+                            <i class="fas fa-download download-icon"></i>Download Distance Matrix
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="main">
+                    <div id="explanations" class="card"></div>
+                    <div id="controls" style="display: none; text-align: center; margin-top: 25px;">
+                        <button onclick="nextStep()" id="nextBtn">Next Step</button>
+                    </div>
+                </div>
+            </div>
+             
+           <div id="tree-container">
+                <div class="tree-controls">
+                    <button onclick="zoomIn()">
+                        <i class="fas fa-search-plus"></i> <span>Zoom In</span>
+                    </button>
+                    <button onclick="zoomOut()">
+                        <i class="fas fa-search-minus"></i> <span>Zoom Out</span>
+                    </button>
+                    <button onclick="downloadTreeImage('svg')">
+                        <i class="fas fa-download"></i> <span>SVG</span>
+                    </button>
+                    <button onclick="downloadTreeImage('png')">
+                        <i class="fas fa-download"></i> <span>PNG</span>
+                    </button>
+                </div>
+                <div id="tree-svg-container"></div>
+            </div>
+           
+        </div>
+    </div>
+        
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+        let algorithmState = null;
+        let currentStep = 0;
+          let isProcessing = false;
+          
+           // Function to update the status message
+          // Function to update the status message
+        function updateStatus(message, type) {
+            const statusElement = document.getElementById('status-message');
+            statusElement.textContent = message;
+            statusElement.className = 'status-banner';
+            
+            switch(type) {
+                case 'success':
+                    statusElement.style.color = '#155724';
+                    statusElement.style.backgroundColor = '#d4edda';
+                    break;
+                case 'info':
+                    statusElement.style.color = '#0c5460';
+                    statusElement.style.backgroundColor = '#d1ecf1';
+                    break;
+                case 'error':
+                    statusElement.style.color = '#721c24';
+                    statusElement.style.backgroundColor = '#f8d7da';
+                    break;
+            }
+        }
+        
+        // Function to update progress bar
+        function updateProgress(percent) {
+            document.getElementById('progressBar').style.width = percent + '%';
+        }
+
+        function computeDistanceMatrix(sequences, labels) {
+            const size = sequences.length;
+            const matrix = Array.from({length: size}, () => new Array(size).fill(0));
+            let explanations = ["<div style=\"background: #f5f5f5; padding: 15px; border-radius: 5px;\"><h3>Construct the Distance Matrix</h3>1. Organize the pairwise distances into a symmetric matrix where:<br>&nbsp&nbsp a). Rows and columns represent taxa.<br>&nbsp&nbsp b). Diagonal entries are 0 (distance from a taxon to itself).<br>&nbsp&nbsp c). Off-diagonal entries are the computed distances.</div><h4>Distance Matrix Calculation</h4><br>p-distance formula:d = (number of differences) / (compared sites)"];
+            
+            for (let i = 0; i < size; i++) {
+                for (let j = i+1; j < size; j++) {
+                    const seq1 = sequences[i];
+                    const seq2 = sequences[j];
+                    const minLength = Math.min(seq1.length, seq2.length);
+                    let differences = 0;
+                    
+                    for (let k = 0; k < minLength; k++) {
+                        if (seq1[k] !== seq2[k]) differences++;
+                    }
+                    
+                    const distance = differences / minLength;
+                    matrix[i][j] = matrix[j][i] = distance;
+                    
+                    explanations.push(`
+                        <div class="equation">
+                            D(${labels[i]}, ${labels[j]}) = 
+                            ${differences} differences / ${minLength} sites = ${distance.toFixed(4)}
+                        </div>
+                    `);
+                }
+            }
+            
+            const explanationsElement = document.getElementById("explanations");
+            if (explanationsElement) {
+                explanationsElement.innerHTML = explanations.join("");
+            }
+            
+            return matrix;
+        }
+
+        function updateMatrix(oldMatrix, mergedPair, labels) {
+            const [i, j] = mergedPair;
+            const newSize = oldMatrix.length - 1;
+            const newMatrix = Array.from({length: newSize}, () => new Array(newSize).fill(0));
+            let explanations = ["<h4>Cluster Merging Calculation</h4>"];
+            
+            explanations.push(`
+                <div class="equation">
+                    Merging clusters ${labels[i]} and ${labels[j]}<br>
+                    New distances calculated using formula: <br>
+                    D(new,k) = (D(${labels[i]},k) + D(${labels[j]},k) - D(${labels[i]},${labels[j]})) / 2
+                </div>
+            `);
+
+            // Copy unchanged values
+            let newRow = 0;
+            for (let x = 0; x < oldMatrix.length; x++) {
+                if (x === i || x === j) continue;
+                let newCol = 0;
+                for (let y = 0; y < oldMatrix.length; y++) {
+                    if (y === i || y === j) continue;
+                    newMatrix[newRow][newCol] = oldMatrix[x][y];
+                    newCol++;
+                }
+                newRow++;
+            }
+
+            // Calculate new distances
+            const d_ij = oldMatrix[i][j];
+            for (let k = 0; k < newSize - 1; k++) {
+                const originalIndex = k < Math.min(i, j) ? k : k + 1;
+                const d_ik = oldMatrix[i][originalIndex];
+                const d_jk = oldMatrix[j][originalIndex];
+                const newDist = (d_ik + d_jk - d_ij) / 2;
+                
+                explanations.push(`
+                    <div class="equation">
+                        D(new,${labels[originalIndex]}) = 
+                        (${d_ik.toFixed(4)} + ${d_jk.toFixed(4)} - ${d_ij.toFixed(4)}) / 2 = ${newDist.toFixed(4)}
+                    </div>
+                `);
+                
+                newMatrix[k][newSize-1] = newDist;
+                newMatrix[newSize-1][k] = newDist;
+            }
+
+            const explanationsElement = document.getElementById("explanations");
+            if (explanationsElement) {
+                explanationsElement.innerHTML += explanations.join("");
+            }
+            
+            return newMatrix;
+        }
+
+        function visualizeTree(treeData) {
+            const container = d3.select("#tree-svg-container");
+            container.html("");
+            
+            const width = document.getElementById("tree-container").clientWidth;
+            const height = document.getElementById("tree-container").clientHeight;
+            
+            const svg = container.append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .attr("id", "tree-svg")
+                .attr("viewBox", `0 0 ${width} ${height}`)
+                .attr("preserveAspectRatio", "xMidYMid meet");
+            
+            // Create zoom behavior
+            const zoom = d3.zoom()
+                .scaleExtent([0.1, 5])
+                .on('zoom', (event) => {
+                    currentTreeG.attr("transform", event.transform);
+                });
+                
+            currentTreeZoom = zoom;
+            svg.call(zoom);
+
+            currentTreeG = svg.append("g")
+                .attr("transform", "translate(50, 50)");
+
+            const root = d3.hierarchy(treeData);
+            const treeLayout = d3.tree().size([height-150, width-200]);
+            treeLayout(root);
+
+            // Draw links
+            const links = currentTreeG.selectAll(".link")
+                .data(root.links())
+                .enter().append("path")
+                .attr("class", "link")
+                .attr("d", d3.linkHorizontal()
+                    .x(d => d.y)
+                    .y(d => d.x))
+                .style("stroke", "#20B2AA")
+                .style("stroke-width", 3)
+                .style("fill", "none")
+                .on("mouseover", function(event, d) {
+                    d3.select(this).style("stroke", "#FF6B6B");
+                    showTooltip(event, `Branch from ${d.source.data.name} to ${d.target.data.name}<br>Length: ${d.target.data.distance?.toFixed(4) || '0.0000'}`);
+                })
+                .on("mouseout", function() {
+                    d3.select(this).style("stroke", "#20B2AA");
+                    hideTooltip();
+                });
+
+            // Add branch labels
+            const branchLabels = currentTreeG.selectAll(".branch-label")
+                .data(root.links())
+                .enter().append("text")
+                .attr("class", "branch-label")
+                .attr("x", d => (d.source.y + d.target.y) / 2)
+                .attr("y", d => (d.source.x + d.target.x) / 2)
+                .attr("text-anchor", "middle")
+                .attr("dy", "0.6em")
+                .text(d => d.target.data.distance?.toFixed(4) || "")
+                .style("font-size", "14px")
+                .style("fill", "#2c3e50")
+                .style("font-weight", "bold");
+
+            // Draw nodes
+            const nodes = currentTreeG.selectAll(".node")
+                .data(root.descendants())
+                .enter().append("g")
+                .attr("class", "node")
+                .attr("transform", d => `translate(${d.y},${d.x})`)
+                .on("mouseover", function(event, d) {
+                    d3.select(this).select("text").style("fill", "#FF6B6B");
+                    const content = d.data.children 
+                        ? `Cluster: ${d.data.name}`
+                        : `Leaf: ${d.data.name}`;
+                    showTooltip(event, content);
+                })
+                .on("mouseout", function() {
+                    d3.select(this).select("text").style("fill", "#2c3e50");
+                    hideTooltip();
+                })
+                .on("click", (event, d) => {
+                    alert(`Node: ${d.data.name}\nDistance: ${d.data.distance?.toFixed(4) || '0.0000'}`);
+                });
+
+            nodes.append("circle")
+                .attr("r", 6)
+                .style("fill", "#FF6B6B")
+                .style("stroke", "#ffffff")
+                .style("stroke-width", 2);
+
+            nodes.append("text")
+                .attr("dx", 10)
+                .attr("dy", 5)
+                .text(d => d.data.name)
+                .style("fill", "#2c3e50")
+                .style("font-size", "16px")
+                .style("font-weight", "bold");
+                
+            // Store the SVG reference
+            currentTreeSvg = document.getElementById("tree-svg");
+        }
+            function showTooltip(event, content) {
+            let tooltip = d3.select("#tooltip");
+            if (tooltip.empty()) {
+                tooltip = d3.select("body")
+                    .append("div")
+                    .attr("id", "tooltip")
+                    .attr("class", "tooltip")
+                    .style("opacity", 0);
+            }
+            
+            tooltip.html(content)
+                .style("left", (event.pageX + 15) + "px")
+                .style("top", (event.pageY - 30) + "px")
+                .transition()
+                .duration(200)
+                .style("opacity", 1);
+        }
+
+        function hideTooltip() {
+            d3.select("#tooltip")
+                .transition()
+                .duration(200)
+                .style("opacity", 0)
+                .remove();
+        }
+        
+
+        function getClosestPairExplanation(matrix, labels) {
+            if (matrix.length < 2) return "<p>Only one cluster remaining.</p>";
+            const [i, j] = findMinPair(matrix);
+            const distance = matrix[i][j];
+            return `<p>Closest pair: ${labels[i]} and ${labels[j]} with distance ${distance.toFixed(4)}</p>`;
+        }
+
+        function processFile() {
+            if (isProcessing) return;
+            const fileInput = document.getElementById("fileInput");
+            if (!fileInput.files[0]) {
+                updateStatus("Please select a file first", "error");
+                return;
+            }
+      
+            isProcessing = true;
+            updateStatus("Processing file...", "info");
+            updateProgress(0);
+
+            const reader = new FileReader();
+            reader.onload = e => {
+                try {
+                    const content = e.target.result;
+                    labels = [];
+                    sequences = [];
+                    sequenceNames = [];
+                    
+                    if(fileInput.files[0].name.match(/\.(fa|fasta)$/)) {
+                        content.split(">").slice(1).forEach((entry, index) => {
+                            const [header, ...seq] = entry.split("\n");
+                            const name = header?.trim().split(/\s+/)[0] || `Sequence ${index+1}`;
+                            sequenceNames.push(name);
+                            labels.push(String.fromCharCode(65+index));
+                            sequences.push(seq.join("").trim());
+                        });
+                    } else {
+                        sequences = content.split("\n").map(l => l.trim()).filter(l => l);
+                        labels = sequences.map((_,i) => String.fromCharCode(65+i));
+                        sequenceNames = sequences.map((seq, i) => `Sequence ${String.fromCharCode(65+i)}`);
+                    }
+
+                    // Show sequence labels
+                    const sequenceKey = document.getElementById("sequence-labels-list");
+                    sequenceKey.innerHTML = labels.map((label, index) => 
+                        `<div class="step">
+                            <b>${label}:</b> ${sequenceNames[index]}
+                        </div>`
+                    ).join('');
+                    document.getElementById("sequence-key").style.display = "block";
+
+                    if (sequences.length < 2) {
+                        throw new Error("At least 2 sequences required");
+                    }
+
+                    const matrix = computeDistanceMatrix(sequences, labels);
+                    algorithmState = {
+                        matrix: matrix,
+                        labels: labels,
+                        sequenceNames: sequenceNames,
+                        clusters: labels.map((l,i) => ({
+                            name: l,
+                            index: i,
+                            children: []
+                        }))
+                    };
+                    
+                    // Show results section
+                    document.getElementById("mainResults").style.display = "block";
+                    document.getElementById("controls").style.display = "block";
+                    document.getElementById("output").innerHTML = `<h3>Initial Distance Matrix</h3>${displayMatrix(matrix, labels)}${getClosestPairExplanation(matrix, labels)}`;
+                    document.getElementById("nextBtn").disabled = false;
+                    
+                    updateStatus("File processed successfully. Ready for clustering.", "success");
+                    isProcessing = false;
+                    updateProgress(100);
+                    
+                    // Visualize initial state (all separate nodes)
+                    visualizeInitialState(labels);
+                    
+                } catch (error) {
+                    updateStatus(`Error: ${error.message}`, "error");
+                    isProcessing = false;
+                }
+            };
+            reader.readAsText(fileInput.files[0]);
+        }
+        
+         function visualizeInitialState(labels) {
+            const container = d3.select("#tree-svg-container")
+                .html("")
+                .append("svg")
+                .attr("width", "100%")
+                .attr("height", "100%");
+            
+            const width = document.getElementById("tree-container").clientWidth;
+            const height = document.getElementById("tree-container").clientHeight;
+            const nodeSpacing = width / (labels.length + 1);
+            
+            const g = container.append("g");
+            
+            labels.forEach((label, i) => {
+                const x = nodeSpacing * (i + 1);
+                const y = height / 2;
+                
+                g.append("circle")
+                    .attr("cx", x)
+                    .attr("cy", y)
+                    .attr("r", 8)
+                    .style("fill", "#20B2AA");
+                
+                g.append("text")
+                    .attr("x", x)
+                    .attr("y", y + 30)
+                    .attr("text-anchor", "middle")
+                    .text(label)
+                    .style("font-size", "18px")
+                    .style("fill", "#2c3e50")
+                    .style("font-weight", "bold");
+            });
+            
+            g.append("text")
+                .attr("x", width/2)
+                .attr("y", 40)
+                .attr("text-anchor", "middle")
+                .text("Initial State - No Clustering Performed Yet")
+                .style("font-size", "20px")
+                .style("fill", "#20B2AA")
+                .style("font-weight", "bold");
+        }
+
+        function nextStep() {
+            if (isProcessing || !algorithmState) return;
+            
+            // Check if clustering is complete
+            if (algorithmState.clusters.length <= 1) {
+                document.getElementById("nextBtn").disabled = true;
+                updateStatus("Clustering complete! No more steps available.", "info");
+                return;
+            }
+            
+            isProcessing = true;
+            updateStatus("Performing clustering step...", "info");
+            
+            try {
+                const minPair = findMinPair(algorithmState.matrix);
+                const clusterA = algorithmState.clusters[minPair[0]];
+                const clusterB = algorithmState.clusters[minPair[1]];
+                const distance = algorithmState.matrix[minPair[0]][minPair[1]];
+                
+                // Create new cluster
+                const newCluster = {
+                    name: `${clusterA.name}-${clusterB.name}`,
+                    children: [
+                        { 
+                            name: clusterA.name,
+                            children: clusterA.children,
+                            distance: distance / 2 
+                        },
+                        { 
+                            name: clusterB.name,
+                            children: clusterB.children,
+                            distance: distance / 2 
+                        }
+                    ]
+                };
+                
+                // Update clusters
+                algorithmState.clusters = [
+                    ...algorithmState.clusters.filter((_,i) => i !== minPair[0] && i !== minPair[1]),
+                    newCluster
+                ];
+                
+                // Check if clustering is complete
+                if (algorithmState.clusters.length <= 1) {
+                    document.getElementById("output").innerHTML = 
+                        `<h3>Final Cluster</h3>` +
+                        `<p>Clustering complete! Final cluster: ${newCluster.name}</p>`;
+                    visualizeTree(newCluster);
+                    updateStatus("Clustering complete! Final tree generated.", "success");
+                    document.getElementById("nextBtn").disabled = true;
+                    isProcessing = false;
+                    return;
+                }
+                
+                // Update distance matrix
+                algorithmState.matrix = updateMatrix(algorithmState.matrix, minPair, algorithmState.labels);
+                algorithmState.labels = algorithmState.clusters.map(c => c.name);
+                
+                // Update display
+                document.getElementById("output").innerHTML = 
+                    `<h3>Step ${++currentStep} - Current Matrix</h3>${displayMatrix(algorithmState.matrix, algorithmState.labels)}` +
+                    `${getClosestPairExplanation(algorithmState.matrix, algorithmState.labels)}` +
+                    `<p>Merged clusters: ${clusterA.name} and ${clusterB.name} (distance: ${distance.toFixed(4)})</p>`;
+                
+                // Visualize current tree
+                visualizeTree(newCluster);
+                
+                updateStatus("Clustering step completed successfully.", "success");
+                isProcessing = false;
+                
+            } catch (error) {
+                updateStatus(`Error: ${error.message}`, "error");
+                isProcessing = false;
+            }
+            
+            // Update button state
+            document.getElementById("nextBtn").disabled = algorithmState.clusters.length <= 1;
+        }
+
+        function displayMatrix(matrix, labels) {
+            if (!matrix || !labels || matrix.length !== labels.length) {
+                return '<div class="error">Matrix display error</div>';
+            }
+            
+            let html = '<table><tr><th></th>';
+            labels.forEach(label => html += `<th>${label}</th>`);
+            html += '</tr>';
+            
+            matrix.forEach((row, i) => {
+                html += `<tr><th>${labels[i]}</th>`;
+                row.forEach(cell => {
+                    html += `<td>${cell?.toFixed(4) ?? 'N/A'}</td>`;
+                });
+                html += '</tr>';
+            });
+            
+            return html + '</table>';
+        }
+
+        function findMinPair(matrix) {
+            let min = Infinity, pair = [0, 1];
+            for (let i = 0; i < matrix.length; i++) {
+                for (let j = i + 1; j < matrix[i].length; j++) {
+                    if (matrix[i][j] < min) {
+                        min = matrix[i][j];
+                        pair = [i, j];
+                    }
+                }
+            }
+            return pair;
+        }
+        
+        // Export functions
+          function downloadMatrix() {
+            if (!algorithmState) {
+                alert("No data to export");
+                return;
+            }
+            
+            let csvContent = "Taxa," + algorithmState.labels.join(",") + "\n";
+            
+            for (let i = 0; i < algorithmState.matrix.length; i++) {
+                const row = algorithmState.labels[i] + "," + 
+                            algorithmState.matrix[i].map(val => val.toFixed(4)).join(",");
+                csvContent += row + "\n";
+            }
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'distance_matrix.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+         function downloadTreeImage(format) {
+            const svgElement = document.getElementById("tree-svg");
+            if (!svgElement) {
+                alert("No tree to export");
+                return;
+            }
+            
+            if (format === 'png') {
+                // Use saveSvgAsPng library for PNG export
+                saveSvgAsPng(svgElement, "phylogenetic_tree.png", {
+                    scale: 2,
+                    backgroundColor: 'white'
+                });
+            } else if (format === 'svg') {
+                // Create SVG download
+                const svgData = new XMLSerializer().serializeToString(svgElement);
+                const blob = new Blob([svgData], {type: "image/svg+xml"});
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "phylogenetic_tree.svg";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        // Update the zoom controls to use these functions
+       // Zoom functions
+        function zoomIn() {
+            if (currentTreeZoom) {
+                d3.select("#tree-svg").call(currentTreeZoom.scaleBy, 1.2);
+            }
+        }
+
+        function zoomOut() {
+            if (currentTreeZoom) {
+                d3.select("#tree-svg").call(currentTreeZoom.scaleBy, 0.8);
+            }
+        }
+    </script>
+<script src="../assets/js/iframeResize.js"></script>
+        
+        </body>
+</html>

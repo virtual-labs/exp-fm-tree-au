@@ -1,0 +1,86 @@
+{
+  "version": 2.0,
+  "questions": [
+    {
+      "question": "1. In the simulator, the initial step in the FM algorithm is to find the pair of taxa with ",
+      "answers": {
+        "a": "Longest distance",
+        "b": "Smallest distance",
+        "c": "Equal distance",
+        "d": "No distance"
+      },
+ 
+      "correctAnswer": "b",
+      "difficulty": "beginner"
+    },
+  
+    {
+      "question": "2. The primary goal of the Fitch-Margoliash algorithm is",
+      "answers": {
+        "a": "To find the shortest evolutionary path in the taxa",
+        "b": "To find the number of nodes in a tree",
+        "c": "To minimize the difference between observed and estimated distances",
+        "d": "To find common ancestors based on morphological similarities"
+      },
+ 
+      "correctAnswer": "c",
+      "difficulty": "beginner"
+    },
+ 
+ 
+    {
+      "question": "3. To run the simulator, the user must provide a single stretch of biological sequence as input data",
+      "answers": {
+        "a": "True",
+        "b": "False"
+        },
+ 
+      "correctAnswer": "b",
+      "difficulty": "beginner"
+    },
+ 
+
+    {
+      "question": "4. Formula for Distance Matrix Calculation",
+      "answers": {
+        "a": "d = (number of differences) / (compared sites)",
+        "b": "d = (compared sites) / (number of differences)",
+        "c": "d = (number of nucleotides)/ (differences in nucleotides)",
+        "d": "d= (number of nucleotides)/ (number of sequences)"
+      },
+ 
+      "correctAnswer": "a",
+      "difficulty": "beginner"
+    },
+ 
+
+    {
+      "question": "5. To run the simulator, the first step is to identify",
+      "answers": {
+        "a": "Similar sequence",
+        "b": "Dissimilar sequence",
+        "c": "Closest pair",
+        "d": "Clustering"
+      },
+ 
+      "correctAnswer": "c",
+      "difficulty": "beginner"
+    },
+ 
+ 
+
+
+    {
+      "question": "6. Identify the correct steps in the FM algorithm",
+      "answers": {
+        "a": "Distance matrix calculation, closest pair identification, branch length calculation, rearranging distance matrix, single node",
+        "b": "Closest pair identification, distance matrix calculation, rearranging distance matrix, branch length calculation, single node",
+        "c": "Distance matrix calculation, rearranging distance matrix, closest pair identification, branch length calculation, single node",
+        "d": "Closest pair identification, rearranging distance matrix, distance matrix calculation, branch length calculation, single node"
+      },
+
+      "correctAnswer": "a",
+      "difficulty": "beginner"
+    }
+  ]
+}
